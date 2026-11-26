@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mie Gacoan - Self-Order Kiosk (Offline NetBeans App)</title>
+    <style>
+        /* ==========================================================================
+           1. DESIGN TOKENS & PALET WARNA KHAS MIE GACOAN (100% OFFLINE / TANPA CDN)
+           ========================================================================== */
+        :root {
+            --navy-dark: #0f172a;
+            --navy-primary: #1e293b;
+            --navy-slate: #334155;
+            --crimson-red: #e11d48;
+            --crimson-hover: #be123c;
+            --amber-warm: #f59e0b;
+            --amber-light: #fef3c7;
+            --bg-offwhite: #f8fafc;
+            --surface-white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --emerald-ok: #10b981;
+            --emerald-bg: #d1fae5;
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+            --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.1);
+            --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.18);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-offwhite);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==========================================================================
+           2. TOP BRAND HEADER & MAIN NAVIGATION TABS
+           ========================================================================== */
+        header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 100%);
+            color: var(--surface-white);
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 4px solid var(--crimson-red);
+            box-shadow: var(--shadow-md);
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--crimson-red), var(--amber-warm));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.65rem;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            color: var(--amber-warm);
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            margin-top: 2px;
+        }
+
+        /* Navigasi Tab Utama */
+        .main-nav {
+            display: flex;
+            background: rgba(15, 23, 42, 0.65);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--navy-slate);
+            gap: 4px;
+        }
+
+        .nav-tab {
+            background: transparent;
+            color: #cbd5e1;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--surface-white);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-tab.active {
+            background: var(--crimson-red);
+            color: var(--surface-white);
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+        }
+
+        .badge-count {
+            background: var(--amber-warm);
+            color: var(--navy-dark);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 1px 7px;
+            border-radius: 50px;
+        }
+
+        .header-tools {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .offline-pill {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--emerald-ok);
+            color: #6ee7b7;
+            padding: 0.45rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6ee7b7;
+        }
+
+        .btn-oop-info {
+            background: var(--navy-slate);
+            color: var(--amber-warm);
+            border: 1px solid var(--amber-warm);
+            padding: 0.5rem 0.9rem;
+            border-radius: 9px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-oop-info:hover {
+            background: var(--amber-warm);
+            color: var(--navy-dark);
+        }
+
+        /* ==========================================================================
+           3. VIEW CONTAINERS & SPLIT-SCREEN 70% / 30% LAYOUT
+           ========================================================================== */
+        .view-section {
+            display: none;
+            width: 100%;
+            max-width: 1440px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        .kiosk-split {
+            display: grid;
+            grid-template-columns: 7fr 3fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .kiosk-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==========================================================================
+           4. PANEL KIRI (70%): FILTER KATEGORI & KATALOG MENU
+           ========================================================================== */
+        .catalog-panel {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .section-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.9rem;
+            border-bottom: 2px solid var(--bg-offwhite);
+        }
+
+        .section-top h2 {
+            font-size: 1.2rem;
+            color: var(--navy-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Filter Pills */
+        .filter-pills {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-btn {
+            padding: 0.65rem 1.15rem;
+            border-radius: 50px;
+            border: 1.5px solid var(--border-light);
+            background: var(--bg-offwhite);
+            color: var(--navy-slate);
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-btn:hover {
+            border-color: var(--crimson-red);
+            color: var(--crimson-red);
+        }
+
+        .pill-btn.active {
+            background: var(--navy-dark);
+            color: var(--amber-warm);
+            border-color: var(--navy-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Grid Kartu Menu */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .menu-card {
+            background: var(--surface-white);
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--amber-warm);
+        }
+
+        .card-banner {
+            height: 92px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.1rem;
+            position: relative;
+            margin-bottom: 0.85rem;
+        }
+
+        .banner-mie { background: linear-gradient(135deg, #ffe4e6, #fecdd3); }
+        .banner-minuman { background: linear-gradient(135deg, #e0f2fe, #bae6fd); }
+        .banner-dimsum { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+
+        .class-pill {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--amber-warm);
+            font-family: monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 6px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--navy-dark);
+            margin-bottom: 4px;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 0.9rem;
+        }
+
+        /* Selector Varian Inline di Kartu */
+        .variant-box {
+            margin-bottom: 0.9rem;
+        }
+
+        .variant-label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--navy-slate);
+            margin-bottom: 5px;
+        }
+
+        .variant-select {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border-radius: 8px;
+            border: 1.5px solid var(--border-light);
+            background: var(--bg-offwhite);
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--navy-dark);
+            cursor: pointer;
+        }
+
+        .variant-select:focus {
+            outline: none;
+            border-color: var(--crimson-red);
+        }
+
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.8rem;
+            border-top: 1px dashed var(--border-light);
+            margin-top: auto;
+        }
+
+        .price-tag {
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: var(--crimson-red);
+        }
+
+        .btn-add-cart {
+            background: var(--navy-dark);
+            color: var(--surface-white);
+            border: none;
+            padding: 0.55rem 0.95rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-add-cart:hover {
+            background: var(--crimson-red);
+        }
+
+        .btn-add-cart:active {
+            transform: scale(0.96);
+        }
+
+        /* ==========================================================================
+           5. PANEL KANAN (30%, STICKY): DATA PEMESAN & KERANJANG
+           ========================================================================== */
+        .cart-panel {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            position: sticky;
+            top: 88px;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 108px);
+        }
+
+        .panel-heading {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--navy-dark);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-offwhite);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .customer-inputs {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0.65rem;
+            margin-bottom: 1rem;
+            background: var(--bg-offwhite);
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .input-field label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: var(--navy-primary);
+            margin-bottom: 4px;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 0.55rem 0.7rem;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: var(--crimson-red);
+        }
+
+        /* Banner Promo Live */
+        .promo-banner {
+            background: var(--amber-light);
+            border: 1.5px dashed var(--amber-warm);
+            color: #92400e;
+            padding: 0.65rem 0.85rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.35;
+        }
+
+        .promo-banner.unlocked {
+            background: var(--emerald-bg);
+            border-color: var(--emerald-ok);
+            color: #065f46;
+            font-weight: 700;
+        }
+
+        /* Daftar Item di Keranjang */
+        .cart-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 0.9rem;
+            min-height: 150px;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 2.2rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+        }
+
+        .cart-empty-icon {
+            font-size: 2.6rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .cart-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+            background: var(--bg-offwhite);
+            gap: 8px;
+        }
+
+        .cart-row-info h4 {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--navy-dark);
+        }
+
+        .cart-row-variant {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--crimson-red);
+            margin: 2px 0;
+        }
+
+        .cart-row-sub {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .qty-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .qty-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: var(--surface-white);
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            background: var(--navy-dark);
+            color: white;
+        }
+
+        .qty-num {
+            font-size: 0.85rem;
+            font-weight: 800;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Ringkasan Total */
+        .billing-summary {
+            border-top: 2px solid var(--bg-offwhite);
+            padding-top: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .bill-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.88rem;
+            color: var(--navy-slate);
+        }
+
+        .bill-line.promo-line {
+            color: var(--emerald-ok);
+            font-weight: 700;
+        }
+
+        .bill-line.grand-total {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--navy-dark);
+            border-top: 1px solid var(--border-light);
+            padding-top: 0.55rem;
+            margin-top: 0.2rem;
+        }
+
+        .btn-process-order {
+            width: 100%;
+            margin-top: 0.9rem;
+            padding: 0.95rem;
+            background: linear-gradient(135deg, var(--crimson-red), #f43f5e);
+            color: var(--surface-white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.98rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+            transition: transform 0.15s, background 0.2s;
+        }
+
+        .btn-process-order:hover:not(:disabled) {
+            background: var(--crimson-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-process-order:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================================================
+           6. HALAMAN TAB RIWAYAT TRANSAKSI (OFFLINE STORAGE)
+           ========================================================================== */
+        .history-panel {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.25rem;
+        }
+
+        .history-item-card {
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            background: var(--bg-offwhite);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .btn-clear-history {
+            background: #fee2e2;
+            color: var(--crimson-red);
+            border: 1px solid #fecaca;
+            padding: 0.55rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-clear-history:hover {
+            background: var(--crimson-red);
+            color: white;
+        }
+
+        .btn-inspect-receipt {
+            background: var(--navy-primary);
+            color: white;
+            border: none;
+            padding: 0.55rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* ==========================================================================
+           7. MODAL STRUK DIGITAL & MODAL STRUKTUR CLASS OOP
+           ========================================================================== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(3px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 460px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            max-height: 92vh;
+            overflow-y: auto;
+            animation: modalZoom 0.2s ease-out;
+        }
+
+        @keyframes modalZoom {
+            from { transform: scale(0.93); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Desain Struk Thermal Kasir */
+        .thermal-receipt {
+            background: #fffbeb;
+            border: 1.5px dashed #94a3b8;
+            padding: 1.4rem;
+            font-family: "Courier New", Courier, monospace;
+            color: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 1.1rem;
+        }
+
+        .receipt-top {
+            text-align: center;
+            border-bottom: 1.5px dashed #64748b;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .receipt-top h3 {
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .receipt-info-block {
+            font-size: 0.84rem;
+            line-height: 1.55;
+            border-bottom: 1.5px dashed #64748b;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .receipt-item-list {
+            font-size: 0.84rem;
+            border-bottom: 1.5px dashed #64748b;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .r-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            gap: 8px;
+        }
+
+        .receipt-confirm-box {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1.5px dashed #64748b;
+            font-weight: 900;
+            font-size: 0.92rem;
+            color: #065f46;
+        }
+
+        /* Kartu Penjelasan OOP di Modal */
+        .oop-doc-card {
+            background: var(--bg-offwhite);
+            border-left: 4px solid var(--crimson-red);
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+        }
+
+        .oop-doc-card h4 {
+            font-size: 0.92rem;
+            color: var(--navy-dark);
+            margin-bottom: 4px;
+        }
+
+        .oop-doc-card p {
+            font-size: 0.82rem;
+            color: var(--navy-slate);
+            line-height: 1.45;
+        }
+
+        /* Toast Notifikasi Pengganti alert() */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: var(--navy-dark);
+            color: var(--surface-white);
+            padding: 0.85rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            box-shadow: var(--shadow-lg);
+            border-left: 5px solid var(--amber-warm);
+            z-index: 2000;
+            transition: transform 0.28s ease;
+        }
+
+        .toast-box.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ======================================================================
+         HEADER & NAVIGASI UTAMA
+         ====================================================================== -->
+    <header>
+        <div class="brand-area">
+            <div class="brand-logo">🍜</div>
+            <div class="brand-text">
+                <h1>MIE GACOAN — SELF-ORDER KIOSK</h1>
+                <p>Aplikasi Web Offline Berbasis PBO (Apache NetBeans Ready)</p>
+            </div>
+        </div>
+
+        <nav class="main-nav">
+            <button class="nav-tab active" id="tab-order" onclick="switchMainView('order')">
+                🍽️ Menu Pemesanan
+            </button>
+            <button class="nav-tab" id="tab-history" onclick="switchMainView('history')">
+                📜 Riwayat Transaksi <span class="badge-count" id="nav-history-count">0</span>
+            </button>
+        </nav>
+
+        <div class="header-tools">
+            <div class="offline-pill">
+                <span class="status-dot"></span> OFFLINE MODE
+            </div>
+            <button class="btn-oop-info" onclick="openModal('modal-oop')">
+                🧩 Struktur Class OOP
+            </button>
+        </div>
+    </header>
+
+    <!-- ======================================================================
+         VIEW 1: MENU PEMESANAN (SPLIT-SCREEN 70% KIRI / 30% KANAN)
+         ====================================================================== -->
+    <main class="view-section active" id="view-order">
+        <div class="kiosk-split">
+            
+            <!-- PANEL KIRI (70%): KATALOG MENU & FILTER -->
+            <section class="catalog-panel">
+                <div class="section-top">
+                    <h2>🔥 Pilih Menu Mie Gacoan Favoritmu</h2>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                        Pilih varian level pedas / sajian langsung pada kartu menu
+                    </span>
+                </div>
+
+                <!-- Category Filter Pills -->
+                <div class="filter-pills">
+                    <button class="pill-btn active" onclick="filterCategory('semua', this)">
+                        ✨ Semua Menu
+                    </button>
+                    <button class="pill-btn" onclick="filterCategory('mie', this)">
+                        🌶️ Mie Pedas
+                    </button>
+                    <button class="pill-btn" onclick="filterCategory('minuman', this)">
+                        🧊 Minuman Segar
+                    </button>
+                    <button class="pill-btn" onclick="filterCategory('dimsum', this)">
+                        🥟 Dimsum & Pelengkap
+                    </button>
+                </div>
+
+                <!-- Grid Kartu Menu -->
+                <div class="menu-grid" id="menu-grid-container">
+                    <!-- Di-render otomatis oleh JavaScript OOP -->
+                </div>
+            </section>
+
+            <!-- PANEL KANAN (30%, STICKY): DATA PEMESAN & KERANJANG -->
+            <aside class="cart-panel">
+                <div class="panel-heading">
+                    <span>🛒 Data Pemesan & Keranjang</span>
+                    <span style="font-family: monospace; font-size: 0.72rem; background: #e2e8f0; padding: 2px 7px; border-radius: 6px;">Pesanan</span>
+                </div>
+
+                <!-- Form Identitas Pelanggan (Class Pelanggan) -->
+                <div class="customer-inputs">
+                    <div class="input-field">
+                        <label for="cust-name">Nama Pelanggan *</label>
+                        <input type="text" id="cust-name" placeholder="Contoh: Albi / Zazkia" autocomplete="off">
+                    </div>
+                    <div class="input-field">
+                        <label for="cust-table">No. Meja *</label>
+                        <input type="number" id="cust-table" placeholder="12" min="1" max="150">
+                    </div>
+                </div>
+
+                <!-- Banner Promo Otomatis -->
+                <div class="promo-banner" id="promo-indicator">
+                    <span>💡</span>
+                    <span id="promo-message">Beli minimal <strong>2 Minuman</strong> otomatis dapat diskon <strong>Rp 2.000</strong>!</span>
+                </div>
+
+                <!-- Daftar Item Keranjang -->
+                <div class="cart-scroll-area" id="cart-list-area">
+                    <div class="cart-empty">
+                        <span class="cart-empty-icon">🛍️</span>
+                        Keranjang masih kosong.<br>Silakan pilih menu di sebelah kiri.
+                    </div>
+                </div>
+
+                <!-- Ringkasan Harga & Tombol Checkout -->
+                <div class="billing-summary">
+                    <div class="bill-line">
+                        <span>Subtotal</span>
+                        <span id="text-subtotal">Rp 0</span>
+                    </div>
+                    <div class="bill-line promo-line">
+                        <span>Diskon Promo (≥ 2 Minuman)</span>
+                        <span id="text-discount">- Rp 0</span>
+                    </div>
+                    <div class="bill-line grand-total">
+                        <span>Total Bayar</span>
+                        <span id="text-grandtotal">Rp 0</span>
+                    </div>
+                </div>
+
+                <button class="btn-process-order" id="btn-submit-order" onclick="handleProcessOrder()" disabled>
+                    🧾 Proses Pesanan & Cetak Struk
+                </button>
+            </aside>
+
+        </div>
+    </main>
+
+    <!-- ======================================================================
+         VIEW 2: RIWAYAT TRANSAKSI LOKAL (LOCALSTORAGE)
+         ====================================================================== -->
+    <section class="view-section" id="view-history">
+        <div class="history-panel">
+            <div class="section-top">
+                <div>
+                    <h2>📜 Riwayat Transaksi Tersimpan (Offline Storage)</h2>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 4px;">
+                        Seluruh transaksi disimpan secara lokal di browser menggunakan <code>localStorage</code> tanpa koneksi internet.
+                    </p>
+                </div>
+                <button class="btn-clear-history" onclick="clearAllHistory()">
+                    🗑️ Hapus Semua Riwayat
+                </button>
+            </div>
+
+            <div class="history-grid" id="history-grid-container">
+                <!-- Di-render dari localStorage -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================================
+         MODAL 1: DIGITAL RECEIPT (STRUK PEMBAYARAN THERMAL)
+         ====================================================================== -->
+    <div class="modal-backdrop" id="modal-receipt">
+        <div class="modal-dialog">
+            <div class="thermal-receipt" id="receipt-render-target">
+                <!-- Isi struk di-generate dinamis -->
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button id="btn-close-receipt-only" onclick="closeModal('modal-receipt')" style="display:none; flex:1; padding:0.85rem; background:var(--navy-slate); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">
+                    Tutup Struk
+                </button>
+                <button id="btn-save-new-order" onclick="saveOrderAndReset()" style="flex:1; padding:0.9rem; background:var(--emerald-ok); color:white; border:none; border-radius:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                    ✅ Simpan & Pesan Baru
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 2: INSPEKTUR STRUKTUR CLASS OOP (PERTEMUAN 1 - 5)
+         ====================================================================== -->
+    <div class="modal-backdrop" id="modal-oop">
+        <div class="modal-dialog" style="max-width: 560px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:2px solid var(--bg-offwhite); padding-bottom:0.75rem;">
+                <h3 style="color:var(--navy-dark);">🧩 Pemetaan Arsitektur PBO (Pertemuan 1–5)</h3>
+                <button onclick="closeModal('modal-oop')" style="background:#e2e8f0; border:none; width:30px; height:30px; border-radius:8px; font-weight:bold; cursor:pointer;">✕</button>
+            </div>
+
+            <div class="oop-doc-card">
+                <h4>Pertemuan 1 & 2: Superclass <code>Menu</code> & <code>Pelanggan</code> (Encapsulation)</h4>
+                <p>Menggunakan private fields (<code>#namaMenu</code>, <code>#harga</code>, <code>#namaPelanggan</code>, <code>#nomorMeja</code>) yang dilindungi dan diakses melalui method <code>getter</code> dan <code>setter</code>.</p>
+            </div>
+
+            <div class="oop-doc-card">
+                <h4>Pertemuan 1, 3, & 4: Subclass Inheritance & Method Overriding</h4>
+                <p>Class <code>MieGacoan</code> (<code>#levelPedas</code>), <code>Minuman</code> (<code>#tipeSajian</code>), dan <code>Dimsum</code> (<code>#porsi</code>) mewarisi class <code>Menu</code> menggunakan <code>extends</code> & <code>super()</code>, serta meng-override method <code>tampilkanInfo()</code>.</p>
+            </div>
+
+            <div class="oop-doc-card">
+                <h4>Pertemuan 3 & 5: Class <code>Pesanan</code> (Composition, Dependency & Overloading)</h4>
+                <p><strong>Composition:</strong> Menyimpan objek <code>Pelanggan</code> dan daftar objek <code>Menu</code>.<br>
+                <strong>Dependency:</strong> Method <code>prosesPesanan(pelanggan, items)</code> menerima objek sebagai parameter.<br>
+                <strong>Overloading:</strong> Method <code>hitungTotal(subtotal, jumlahMinuman)</code> otomatis menerapkan diskon Rp 2.000 jika <code>jumlahMinuman &gt;= 2</code>.</p>
+            </div>
+
+            <button onclick="closeModal('modal-oop')" style="width:100%; margin-top:0.5rem; padding:0.8rem; background:var(--navy-dark); color:var(--amber-warm); border:none; border-radius:10px; font-weight:800; cursor:pointer;">
+                Mengerti & Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFIKASI -->
+    <div class="toast-box" id="toast-message">Notifikasi</div>
+
+    <!-- ======================================================================
+         JAVASCRIPT: ARSITEKTUR OBJECT-ORIENTED PROGRAMMING (PBO) & LOGIKA KIOSK
+         ====================================================================== -->
+    <script>
+        /* ======================================================================
+           A. DEFINISI CLASS OOP (PERTEMUAN 1 - 5)
+           ====================================================================== */
+
+        // 1. Superclass Menu (Pertemuan 1 & 2: Class, Object, Encapsulation)
+        class Menu {
+            #namaMenu;
+            #harga;
+
+            constructor(namaMenu, harga) {
+                this.#namaMenu = namaMenu;
+                this.#harga = harga;
+            }
+
+            getNamaMenu() {
+                return this.#namaMenu;
+            }
+
+            getHarga() {
+                return this.#harga;
+            }
+
+            setHarga(hargaBaru) {
+                if (hargaBaru >= 0) {
+                    this.#harga = hargaBaru;
+                }
+            }
+
+            tampilkanInfo() {
+                return `${this.#namaMenu} - Rp ${this.#harga.toLocaleString('id-ID')}`;
+            }
+        }
+
+        // 2. Subclass MieGacoan (Pertemuan 1, 3, & 4: Inheritance, super(), @Override)
+        class MieGacoan extends Menu {
+            #levelPedas;
+
+            constructor(namaMenu, harga, levelPedas) {
+                super(namaMenu, harga);
+                this.#levelPedas = levelPedas;
+            }
+
+            getLevelPedas() {
+                return this.#levelPedas;
+            }
+
+            // @Override tampilkanInfo()
+            tampilkanInfo() {
+                return `${this.getNamaMenu()} (${this.#levelPedas})`;
+            }
+        }
+
+        // 3. Subclass Minuman (Pertemuan 1, 3, & 4: Inheritance, super(), @Override)
+        class Minuman extends Menu {
+            #tipeSajian;
+
+            constructor(namaMenu, harga, tipeSajian) {
+                super(namaMenu, harga);
+                this.#tipeSajian = tipeSajian;
+            }
+
+            getTipeSajian() {
+                return this.#tipeSajian;
+            }
+
+            // @Override tampilkanInfo()
+            tampilkanInfo() {
+                return `${this.getNamaMenu()} (${this.#tipeSajian})`;
+            }
+        }
+
+        // 4. Subclass Dimsum (Pertemuan 1, 3, & 4: Inheritance, super(), @Override)
+        class Dimsum extends Menu {
+            #porsi;
+
+            constructor(namaMenu, harga, porsi = "3 Pcs") {
+                super(namaMenu, harga);
+                this.#porsi = porsi;
+            }
+
+            getPorsi() {
+                return this.#porsi;
+            }
+
+            // @Override tampilkanInfo()
+            tampilkanInfo() {
+                return `${this.getNamaMenu()} (${this.#porsi})`;
+            }
+        }
+
+        // 5. Entity Class Pelanggan (Pertemuan 2: Encapsulation)
+        class Pelanggan {
+            #namaPelanggan;
+            #nomorMeja;
+
+            constructor(namaPelanggan, nomorMeja) {
+                this.#namaPelanggan = namaPelanggan;
+                this.#nomorMeja = nomorMeja;
+            }
+
+            getNamaPelanggan() {
+                return this.#namaPelanggan;
+            }
+
+            setNamaPelanggan(nama) {
+                this.#namaPelanggan = nama;
+            }
+
+            getNomorMeja() {
+                return this.#nomorMeja;
+            }
+
+            setNomorMeja(meja) {
+                this.#nomorMeja = meja;
+            }
+        }
+
+        // 6. Transaction Class Pesanan (Pertemuan 3 & 5: Composition, Dependency, Method Overloading)
+        class Pesanan {
+            constructor(pelanggan, items) {
+                this.pelanggan = pelanggan; // Composition: holds Pelanggan instance
+                this.items = items;         // Composition: holds array of Menu subclass instances
+                this.timestamp = new Date().toLocaleString('id-ID');
+            }
+
+            // Dependency: menerima objek pelanggan & items sebagai parameter method
+            prosesPesanan(pelanggan, items) {
+                return `Order diproses untuk ${pelanggan.getNamaPelanggan()} (Meja ${pelanggan.getNomorMeja()}) - ${items.length} varian item`;
+            }
+
+            // Simulasi Method Overloading: hitungTotal(subtotal, jumlahMinuman)
+            hitungTotal(subtotal, jumlahMinuman = 0) {
+                const diskon = jumlahMinuman >= 2 ? 2000 : 0;
+                return {
+                    subtotal: subtotal,
+                    diskon: diskon,
+                    totalAkhir: subtotal - diskon
+                };
+            }
+        }
+
+        /* ======================================================================
+           B. DATA KATALOG MENU OFFLINE MIE GACOAN
+           ====================================================================== */
+        const CATALOG_ITEMS = [
+            // Kategori Mie Pedas
+            {
+                id: 'mie-suit',
+                nama: 'Mie Suit',
+                harga: 10000,
+                kategori: 'mie',
+                ikon: '🍜',
+                deskripsi: 'Mie gurih original tidak pedas dengan taburan ayam cincang & pangsit goreng.',
+                varianLabel: 'Pilih Level Pedas:',
+                varianOpsi: ['Level 0']
+            },
+            {
+                id: 'mie-hompimpa',
+                nama: 'Mie Hompimpa',
+                harga: 10000,
+                kategori: 'mie',
+                ikon: '🌶️',
+                deskripsi: 'Mie pedas gurih asin legendaris dengan sensasi cabai pilihan.',
+                varianLabel: 'Pilih Level Pedas:',
+                varianOpsi: ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 6', 'Level 8']
+            },
+            {
+                id: 'mie-gacoan',
+                nama: 'Mie Gacoan',
+                harga: 10000,
+                kategori: 'mie',
+                ikon: '🔥',
+                deskripsi: 'Menu favorit mie pedas manis khas Gacoan dengan kecap spesial.',
+                varianLabel: 'Pilih Level Pedas:',
+                varianOpsi: ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 6', 'Level 8']
+            },
+
+            // Kategori Minuman Segar
+            {
+                id: 'es-gobak-sodor',
+                nama: 'Es Gobak Sodor',
+                harga: 9000,
+                kategori: 'minuman',
+                ikon: '🍹',
+                deskripsi: 'Minuman segar perpaduan aneka buah, cincau, dan kelapa muda.',
+                varianLabel: 'Tipe Sajian:',
+                varianOpsi: ['Dingin', 'Hangat']
+            },
+            {
+                id: 'es-teklek',
+                nama: 'Es Teklek',
+                harga: 6000,
+                kategori: 'minuman',
+                ikon: '🥤',
+                deskripsi: 'Kesegaran sirup manis dengan potongan buah tropis menyegarkan.',
+                varianLabel: 'Tipe Sajian:',
+                varianOpsi: ['Dingin', 'Hangat']
+            },
+            {
+                id: 'es-sluku-bathok',
+                nama: 'Es Sluku Bathok',
+                harga: 6000,
+                kategori: 'minuman',
+                ikon: '🥥',
+                deskripsi: 'Perpaduan susu segar dan sirup mocca yang lembut dan manis.',
+                varianLabel: 'Tipe Sajian:',
+                varianOpsi: ['Dingin', 'Hangat']
+            },
+            {
+                id: 'es-petak-umpet',
+                nama: 'Es Petak Umpet',
+                harga: 9000,
+                kategori: 'minuman',
+                ikon: '🧊',
+                deskripsi: 'Minuman menyegarkan dengan rasa asam manis buah pilihan.',
+                varianLabel: 'Tipe Sajian:',
+                varianOpsi: ['Dingin', 'Hangat']
+            },
+
+            // Kategori Dimsum & Pelengkap
+            {
+                id: 'siomay-ayam',
+                nama: 'Siomay Ayam',
+                harga: 9000,
+                kategori: 'dimsum',
+                ikon: '🥟',
+                deskripsi: 'Siomay ayam udang kukus lembut dengan saus sambal khas Gacoan.',
+                varianLabel: 'Ukuran Porsi:',
+                varianOpsi: ['3 Pcs', '4 Pcs']
+            },
+            {
+                id: 'udang-rambutan',
+                nama: 'Udang Rambutan',
+                harga: 9000,
+                kategori: 'dimsum',
+                ikon: '🍤',
+                deskripsi: 'Bola daging udang dibalut irisan kulit pangsit renyah keemasan.',
+                varianLabel: 'Ukuran Porsi:',
+                varianOpsi: ['3 Pcs', '4 Pcs']
+            },
+            {
+                id: 'udang-keju',
+                nama: 'Udang Keju',
+                harga: 9000,
+                kategori: 'dimsum',
+                ikon: '🧀',
+                deskripsi: 'Dimsum udang goreng renyah dengan isian keju lumer di dalam.',
+                varianLabel: 'Ukuran Porsi:',
+                varianOpsi: ['3 Pcs', '4 Pcs']
+            },
+            {
+                id: 'pangsit-goreng',
+                nama: 'Pangsit Goreng',
+                harga: 10000,
+                kategori: 'dimsum',
+                ikon: '🥠',
+                deskripsi: 'Pangsit goreng isi ayam cincang gurih super renyah favorit.',
+                varianLabel: 'Ukuran Porsi:',
+                varianOpsi: ['3 Pcs', '4 Pcs']
+            }
+        ];
+
+        /* ======================================================================
+           C. STATE MANAGEMENT & LOCALSTORAGE
+           ====================================================================== */
+        let currentCategory = 'semua';
+        let cartItems = []; // Menyimpan objek { menuInstance, qty }
+        let pendingTransaction = null;
+        const LOCAL_STORAGE_KEY = 'gacoan_offline_kiosk_transactions';
+
+        function getSavedHistory() {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function updateHistoryCounter() {
+            const list = getSavedHistory();
+            document.getElementById('nav-history-count').textContent = list.length;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            toast.textContent = msg;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2600);
+        }
+
+        /* ======================================================================
+           D. RENDER KATALOG & FILTER KATEGORI
+           ====================================================================== */
+        function filterCategory(category, btnEl) {
+            currentCategory = category;
+            document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            renderMenuGrid();
+        }
+
+        function renderMenuGrid() {
+            const container = document.getElementById('menu-grid-container');
+            container.innerHTML = '';
+
+            const filtered = currentCategory === 'semua'
+                ? CATALOG_ITEMS
+                : CATALOG_ITEMS.filter(item => item.kategori === currentCategory);
+
+            filtered.forEach(item => {
+                const bannerClass = item.kategori === 'mie'
+                    ? 'banner-mie'
+                    : (item.kategori === 'minuman' ? 'banner-minuman' : 'banner-dimsum');
+
+                const classTag = item.kategori === 'mie'
+                    ? 'MieGacoan'
+                    : (item.kategori === 'minuman' ? 'Minuman' : 'Dimsum');
+
+                const optionsHtml = item.varianOpsi
+                    .map(opt => `<option value="${opt}">${opt}</option>`)
+                    .join('');
+
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="card-banner ${bannerClass}">
+                            <span>${item.ikon}</span>
+                            <span class="class-pill">${classTag}</span>
+                        </div>
+                        <h3 class="card-title">${item.nama}</h3>
+                        <p class="card-desc">${item.deskripsi}</p>
+                    </div>
+                    <div>
+                        <div class="variant-box">
+                            <label class="variant-label" for="sel-${item.id}">${item.varianLabel}</label>
+                            <select class="variant-select" id="sel-${item.id}">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div class="card-bottom">
+                            <span class="price-tag">Rp ${item.harga.toLocaleString('id-ID')}</span>
+                            <button class="btn-add-cart" onclick="addItemToCart('${item.id}')">+ Tambah</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ======================================================================
+           E. INTERAKSI KERANJANG & INSTANSIASI SUBCLASS OOP
+           ====================================================================== */
+        function addItemToCart(itemId) {
+            const itemData = CATALOG_ITEMS.find(i => i.id === itemId);
+            if (!itemData) return;
+
+            const selectedVariant = document.getElementById(`sel-${itemId}`).value;
+
+            // Instansiasi Subclass OOP sesuai kategori menu
+            let menuInstance;
+            if (itemData.kategori === 'mie') {
+                menuInstance = new MieGacoan(itemData.nama, itemData.harga, selectedVariant);
+            } else if (itemData.kategori === 'minuman') {
+                menuInstance = new Minuman(itemData.nama, itemData.harga, selectedVariant);
+            } else {
+                menuInstance = new Dimsum(itemData.nama, itemData.harga, selectedVariant);
+            }
+
+            const infoText = menuInstance.tampilkanInfo(); // Panggil @Override tampilkanInfo()
+            const existingIndex = cartItems.findIndex(c => c.menuInstance.tampilkanInfo() === infoText);
+
+            if (existingIndex > -1) {
+                cartItems[existingIndex].qty += 1;
+            } else {
+                cartItems.push({
+                    menuInstance: menuInstance,
+                    kategori: itemData.kategori,
+                    qty: 1
+                });
+            }
+
+            showToast(`✅ ${infoText} ditambahkan ke keranjang!`);
+            renderCart();
+        }
+
+        function updateItemQty(index, change) {
+            cartItems[index].qty += change;
+            if (cartItems[index].qty <= 0) {
+                cartItems.splice(index, 1);
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const listArea = document.getElementById('cart-list-area');
+            const submitBtn = document.getElementById('btn-submit-order');
+
+            if (cartItems.length === 0) {
+                listArea.innerHTML = `
+                    <div class="cart-empty">
+                        <span class="cart-empty-icon">🛍️</span>
+                        Keranjang masih kosong.<br>Silakan pilih menu di sebelah kiri.
+                    </div>
+                `;
+                submitBtn.disabled = true;
+                updateBillingDisplay(0, 0, 0, 0);
+                return;
+            }
+
+            submitBtn.disabled = false;
+            listArea.innerHTML = '';
+
+            let subtotal = 0;
+            let totalDrinksCount = 0;
+
+            cartItems.forEach((entry, idx) => {
+                const mObj = entry.menuInstance;
+                const linePrice = mObj.getHarga() * entry.qty;
+                subtotal += linePrice;
+
+                if (mObj instanceof Minuman) {
+                    totalDrinksCount += entry.qty;
+                }
+
+                // Ambil detail varian dari method getter subclass
+                let variantDetail = '';
+                if (mObj instanceof MieGacoan) variantDetail = mObj.getLevelPedas();
+                else if (mObj instanceof Minuman) variantDetail = mObj.getTipeSajian();
+                else if (mObj instanceof Dimsum) variantDetail = mObj.getPorsi();
+
+                const row = document.createElement('div');
+                row.className = 'cart-row';
+                row.innerHTML = `
+                    <div class="cart-row-info">
+                        <h4>${mObj.getNamaMenu()}</h4>
+                        <div class="cart-row-variant">${variantDetail}</div>
+                        <div class="cart-row-sub">Rp ${linePrice.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="qty-actions">
+                        <button class="qty-btn" onclick="updateItemQty(${idx}, -1)">-</button>
+                        <span class="qty-num">${entry.qty}</span>
+                        <button class="qty-btn" onclick="updateItemQty(${idx}, 1)">+</button>
+                    </div>
+                `;
+                listArea.appendChild(row);
+            });
+
+            // Gunakan method hitungTotal() dari class Pesanan
+            const tempOrder = new Pesanan(null, []);
+            const calc = tempOrder.hitungTotal(subtotal, totalDrinksCount);
+            updateBillingDisplay(calc.subtotal, calc.diskon, calc.totalAkhir, totalDrinksCount);
+        }
+
+        function updateBillingDisplay(subtotal, diskon, totalAkhir, drinkCount) {
+            document.getElementById('text-subtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+            document.getElementById('text-discount').textContent = `- Rp ${diskon.toLocaleString('id-ID')}`;
+            document.getElementById('text-grandtotal').textContent = `Rp ${totalAkhir.toLocaleString('id-ID')}`;
+
+            const promoBox = document.getElementById('promo-indicator');
+            const promoMsg = document.getElementById('promo-message');
+
+            if (diskon > 0) {
+                promoBox.classList.add('unlocked');
+                promoMsg.innerHTML = `🎉 <strong>Promo Aktif:</strong> Diskon Rp 2.000 beli ≥ 2 Minuman (${drinkCount} gelas)!`;
+            } else {
+                promoBox.classList.remove('unlocked');
+                promoMsg.innerHTML = `Beli minimal <strong>2 Minuman</strong> otomatis dapat diskon <strong>Rp 2.000</strong>!`;
+            }
+        }
+
+        /* ======================================================================
+           F. PROSES PESANAN & CETAK STRUK DIGITAL (OOP EXECUTION)
+           ====================================================================== */
+        function handleProcessOrder() {
+            const namaVal = document.getElementById('cust-name').value.trim();
+            const mejaVal = document.getElementById('cust-table').value.trim();
+
+            if (!namaVal) {
+                showToast('⚠️ Harap masukkan Nama Pelanggan terlebih dahulu!');
+                document.getElementById('cust-name').focus();
+                return;
+            }
+            if (!mejaVal || parseInt(mejaVal, 10) <= 0) {
+                showToast('⚠️ Harap masukkan Nomor Meja yang valid!');
+                document.getElementById('cust-table').focus();
+                return;
+            }
+
+            // 1. Instansiasi Entity Class Pelanggan
+            const pelangganObj = new Pelanggan(namaVal, parseInt(mejaVal, 10));
+
+            // 2. Kumpulkan array instance Menu dari keranjang
+            const menuInstances = cartItems.map(c => c.menuInstance);
+
+            // 3. Instansiasi Transaction Class Pesanan (Composition)
+            const pesananObj = new Pesanan(pelangganObj, menuInstances);
+
+            // 4. Jalankan Dependency method prosesPesanan()
+            const dependencyLog = pesananObj.prosesPesanan(pelangganObj, menuInstances);
+
+            // 5. Hitung total menggunakan Method Overloading hitungTotal()
+            let subtotal = 0;
+            let drinkCount = 0;
+            const serializedItems = [];
+
+            cartItems.forEach(entry => {
+                const m = entry.menuInstance;
+                const itemTotal = m.getHarga() * entry.qty;
+                subtotal += itemTotal;
+                if (m instanceof Minuman) drinkCount += entry.qty;
+
+                serializedItems.push({
+                    info: m.tampilkanInfo(),
+                    qty: entry.qty,
+                    hargaSatuan: m.getHarga(),
+                    subtotalItem: itemTotal
+                });
+            });
+
+            const billing = pesananObj.hitungTotal(subtotal, drinkCount);
+
+            pendingTransaction = {
+                orderId: 'GCN-' + Math.floor(100000 + Math.random() * 900000),
+                timestamp: pesananObj.timestamp,
+                namaPelanggan: pelangganObj.getNamaPelanggan(),
+                nomorMeja: pelangganObj.getNomorMeja(),
+                items: serializedItems,
+                subtotal: billing.subtotal,
+                diskon: billing.diskon,
+                totalBayar: billing.totalAkhir,
+                oopLog: dependencyLog
+            };
+
+            renderThermalReceipt(pendingTransaction, false);
+            openModal('modal-receipt');
+        }
+
+        function renderThermalReceipt(trx, isHistoryInspection) {
+            const target = document.getElementById('receipt-render-target');
+
+            const itemsRowsHtml = trx.items.map(it => `
+                <div class="r-row">
+                    <span>${it.qty}x ${it.info}</span>
+                    <span>Rp ${it.subtotalItem.toLocaleString('id-ID')}</span>
+                </div>
+            `).join('');
+
+            target.innerHTML = `
+                <div class="receipt-top">
+                    <h3>MIE GACOAN KIOSK</h3>
+                    <div style="font-size:0.75rem;">Self-Order Digital Receipt</div>
+                    <div style="font-size:0.74rem; margin-top:4px; font-weight:bold;">ID: ${trx.orderId}</div>
+                </div>
+                <div class="receipt-info-block">
+                    <div><strong>Pelanggan :</strong> ${trx.namaPelanggan}</div>
+                    <div><strong>No. Meja  :</strong> Meja ${trx.nomorMeja}</div>
+                    <div><strong>Waktu     :</strong> ${trx.timestamp}</div>
+                    <div style="font-size:0.7rem; color:#475569; margin-top:4px;">[${trx.oopLog}]</div>
+                </div>
+                <div class="receipt-item-list">
+                    ${itemsRowsHtml}
+                </div>
+                <div style="font-size:0.86rem; line-height:1.6;">
+                    <div class="r-row">
+                        <span>Subtotal</span>
+                        <span>Rp ${trx.subtotal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="r-row" style="color:#059669; font-weight:bold;">
+                        <span>Diskon Promo</span>
+                        <span>- Rp ${trx.diskon.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="r-row" style="font-size:1.05rem; font-weight:900; border-top:1px solid #64748b; padding-top:6px; margin-top:6px;">
+                        <span>TOTAL BAYAR</span>
+                        <span>Rp ${trx.totalBayar.toLocaleString('id-ID')}</span>
+                    </div>
+                </div>
+                <div class="receipt-confirm-box">
+                    ✅ Pesanan Anda segera disiapkan!
+                </div>
+            `;
+
+            // Atur tombol modal sesuai konteks (Checkout baru vs Lihat Riwayat)
+            document.getElementById('btn-save-new-order').style.display = isHistoryInspection ? 'none' : 'block';
+            document.getElementById('btn-close-receipt-only').style.display = isHistoryInspection ? 'block' : 'none';
+        }
+
+        function saveOrderAndReset() {
+            if (pendingTransaction) {
+                const history = getSavedHistory();
+                history.unshift(pendingTransaction);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(history));
+                updateHistoryCounter();
+            }
+
+            // Reset keranjang & form untuk pelanggan berikutnya
+            cartItems = [];
+            pendingTransaction = null;
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-table').value = '';
+            renderCart();
+            closeModal('modal-receipt');
+            showToast('💾 Transaksi berhasil disimpan ke Riwayat Lokal!');
+        }
+
+        /* ======================================================================
+           G. NAVIGASI TAB & RIWAYAT TRANSAKSI LOKAL
+           ====================================================================== */
+        function switchMainView(viewName) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+
+            if (viewName === 'order') {
+                document.getElementById('tab-order').classList.add('active');
+                document.getElementById('view-order').classList.add('active');
+            } else {
+                document.getElementById('tab-history').classList.add('active');
+                document.getElementById('view-history').classList.add('active');
+                renderHistoryGrid();
+            }
+        }
+
+        function renderHistoryGrid() {
+            const container = document.getElementById('history-grid-container');
+            const history = getSavedHistory();
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align:center; padding:3rem 1rem; color:var(--text-muted);">
+                        <div style="font-size:3rem; margin-bottom:0.5rem;">📭</div>
+                        <p>Belum ada riwayat transaksi yang tersimpan secara offline.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            history.forEach((trx, idx) => {
+                const summaryText = trx.items.map(i => `${i.qty}x ${i.info}`).join(', ');
+                const card = document.createElement('div');
+                card.className = 'history-item-card';
+                card.innerHTML = `
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-weight:800; color:var(--navy-dark); font-size:1rem;">
+                                ${trx.namaPelanggan} • Meja ${trx.nomorMeja}
+                            </span>
+                            <span style="font-weight:800; color:var(--crimson-red); font-size:1rem;">
+                                Rp ${trx.totalBayar.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">
+                            <strong>${trx.orderId}</strong> • ${trx.timestamp}
+                        </div>
+                        <p style="font-size:0.84rem; color:var(--navy-slate); line-height:1.45;">
+                            ${summaryText}
+                        </p>
+                    </div>
+                    <button class="btn-inspect-receipt" onclick="inspectPastReceipt(${idx})">
+                        🧾 Lihat Detail Struk
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function inspectPastReceipt(index) {
+            const history = getSavedHistory();
+            if (history[index]) {
+                renderThermalReceipt(history[index], true);
+                openModal('modal-receipt');
+            }
+        }
+
+        function clearAllHistory() {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            updateHistoryCounter();
+            renderHistoryGrid();
+            showToast('🗑️ Seluruh riwayat transaksi lokal telah dihapus.');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        // Inisialisasi aplikasi saat halaman dimuat
+        window.onload = function () {
+            renderMenuGrid();
+            renderCart();
+            updateHistoryCounter();
+        };
+    </script>
+</body>
+</html>
